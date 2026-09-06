@@ -70,6 +70,8 @@ public class Pocasie {
 
 		JPanel header = new JPanel(new BorderLayout(18, 0));
 		header.setOpaque(false);
+		JLabel clock = label("--:--:--", 16, ACCENT, true);
+		clock.setPreferredSize(new Dimension(92, 32));
 		JLabel title = label("Dobré ráno, dnes bude príjemne", 24, INK, true);
 		title.setBorder(new EmptyBorder(0, 0, 0, 18));
 		header.add(title, BorderLayout.CENTER);
@@ -105,9 +107,14 @@ public class Pocasie {
 		search.add(cityField, BorderLayout.CENTER);
 		search.add(searchButton, BorderLayout.EAST);
 		search.add(unitToggle, BorderLayout.WEST);
-		JPanel headerActions = new JPanel(new BorderLayout(8, 0));
+		JPanel headerActions = new JPanel(new BorderLayout(0, 0));
 		headerActions.setOpaque(false);
-		headerActions.add(search, BorderLayout.CENTER);
+		headerActions.add(search, BorderLayout.WEST);
+		clock.setHorizontalAlignment(JLabel.CENTER);
+		JPanel clockArea = new JPanel(new BorderLayout());
+		clockArea.setOpaque(false);
+		clockArea.add(clock, BorderLayout.CENTER);
+		headerActions.add(clockArea, BorderLayout.CENTER);
 		headerActions.add(favoritesButton, BorderLayout.EAST);
 		header.add(headerActions, BorderLayout.EAST);
 		background.add(header, BorderLayout.NORTH);
@@ -137,13 +144,26 @@ public class Pocasie {
 			} else {
 				for (Place favoritePlace : favoritePlaces) {
 					JButton item = new JButton(favoritePlace.description());
+					Color itemBackground = new Color(36, 50, 65);
+					Color itemHoverBackground = new Color(55, 75, 93);
 					item.setFont(UI_BOLD);
 					item.setForeground(INK);
-					item.setBackground(new Color(36, 50, 65));
+					item.setBackground(itemBackground);
 					item.setHorizontalAlignment(JButton.LEFT);
 					item.setFocusPainted(false);
 					item.setBorder(new EmptyBorder(9, 12, 9, 12));
 					item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+					item.addMouseListener(new java.awt.event.MouseAdapter() {
+						@Override
+						public void mouseEntered(java.awt.event.MouseEvent event) {
+							item.setBackground(itemHoverBackground);
+						}
+
+						@Override
+						public void mouseExited(java.awt.event.MouseEvent event) {
+							item.setBackground(itemBackground);
+						}
+					});
 					item.addActionListener(favoriteEvent -> {
 						cityField.setText(favoritePlace.name());
 						selectedPlace[0] = favoritePlace;
@@ -179,7 +199,12 @@ public class Pocasie {
 				favoritesButton.setText("Obľúbené (" + favoritePlaces.size() + ")");
 			}
 		});
-		Timer refreshTimer = new Timer(600000, event -> {
+		Timer clockTimer = new Timer(1000, event -> {
+			clock.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+		});
+		clockTimer.setInitialDelay(0);
+		clockTimer.start();
+		Timer refreshTimer = new Timer(60000, event -> {
 			if (!cityField.getText().trim().isEmpty() && searchButton.isEnabled()) {
 				searchButton.doClick();
 			}
@@ -274,6 +299,8 @@ public class Pocasie {
 
 		frame.setContentPane(background);
 		frame.setVisible(true);
+		cityField.setText("Bratislava");
+		searchButton.doClick();
 		Timer backgroundAnimation = new Timer(120, event -> {
 			background.advanceAnimation();
 			background.repaint();
